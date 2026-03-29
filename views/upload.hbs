@@ -29,7 +29,17 @@
                     </div>
                     <div class="card-body">
                         {{#if message}}
-                            <div class="alert alert-info">{{message}}</div>
+                            <div class="alert {{#if duplicateWarning}}alert-warning{{else}}alert-info{{/if}}">
+                                {{#if duplicateWarning}}
+                                    <h5>⚠️ Duplicate Document Detected</h5>
+                                    <p>{{message}}</p>
+                                    <a href="/documents/verify/{{existingDocId}}" class="btn btn-info mt-2">Verify Existing Document</a>
+                                    <hr>
+                                    <p class="mb-0 text-muted"><small>If you still wish to upload a new copy, check the "Allow Duplicate" option below and try again.</small></p>
+                                {{else}}
+                                    {{message}}
+                                {{/if}}
+                            </div>
                         {{/if}}
                         
                         {{#if hashes}}
@@ -42,15 +52,21 @@
                                 </ul>
                                 <a href="/documents/sign/{{docId}}" class="btn btn-warning mt-2">Sign Document Now</a>
                             </div>
-                        {{else}}
+                        {{/if}}
+
+                        {{#unless hashes}}
                             <form action="/documents/upload" method="POST" enctype="multipart/form-data">
                                 <div class="form-group">
                                     <label>Select Document to Upload</label>
                                     <input type="file" class="form-control-file" name="document" required>
                                 </div>
+                                <div class="form-group form-check">
+                                    <input type="checkbox" class="form-check-input" id="forceUpload" name="forceUpload" value="true">
+                                    <label class="form-check-label" for="forceUpload">Allow Duplicate (Upload anyway)</label>
+                                </div>
                                 <button type="submit" class="btn btn-primary">Upload and Compute Hashes</button>
                             </form>
-                        {{/if}}
+                        {{/unless}}
                     </div>
                 </div>
             </div>

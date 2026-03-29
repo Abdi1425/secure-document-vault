@@ -43,28 +43,75 @@ exports.uploadDocument = async (req, res) => {
 
         const filePath = file.path;
         const hashes = cryptoUtils.computeAllHashes(filePath);
+        const forceUpload = req.body.forceUpload === 'true';
 
-        pool.query(
-            `INSERT INTO documents (user_id, filename, file_path, file_size, md5_hash, sha1_hash, sha256_hash) 
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [userId, file.originalname, filePath, file.size, hashes.md5, hashes.sha1, hashes.sha256],
-            (error, result) => {
-                if (error) {
-                    console.log(error);
-                    return res.render('upload', {
+        const insertDocument = () => {
+            pool.query(
+                `INSERT INTO documents (user_id, filename, file_path, file_size, md5_hash, sha1_hash, sha256_hash) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [userId, file.originalname, filePath, file.size, hashes.md5, hashes.sha1, hashes.sha256],
+                (error, result) => {
+                    if (error) {
+                        console.log(error);
+                        return res.render('upload', {
+                            user_details: req.user,
+                            message: 'Database error'
+                        });
+                    }
+
+                    res.render('upload', {
                         user_details: req.user,
-                        message: 'Database error'
+                        message: 'Document uploaded successfully!',
+                        hashes: hashes,
+                        docId: result.insertId
                     });
                 }
+            );
+        };
 
-                res.render('upload', {
-                    user_details: req.user,
-                    message: 'Document uploaded successfully!',
-                    hashes: hashes,
-                    docId: result.insertId
-                });
-            }
-        );
+        if (forceUpload) {
+            insertDocument();
+        } else {
+            // Check for duplicates for this specific user
+            pool.query(
+                'SELECT id, filename FROM documents WHERE sha256_hash = ? AND user_id = ?',
+                [hashes.sha256, userId],
+                (duplicateError, duplicateResults) => {
+                    if (duplicateError) {
+                        console.log(duplicateError);
+                        return res.render('upload', {
+                            user_details: req.user,
+                            message: 'Database error during duplicate check'
+                        });
+                    }
+
+                    if (duplicateResults.length > 0) {
+                        // Duplicate found for this user
+                        // Remove the currently uploaded file to save disk space
+                        try {
+                            if (fs.existsSync(filePath)) {
+                                fs.unlinkSync(filePath);
+                            }
+                        } catch (err) {
+                            console.error('Failed to remove duplicate file:', err);
+                        }
+
+                        const existingDoc = duplicateResults[0];
+
+                        return res.render('upload', {
+                            user_details: req.user,
+                            duplicateWarning: true,
+                            existingDocId: existingDoc.id,
+                            existingFilename: existingDoc.filename,
+                            message: `The document you selected is identical to a document already in your vault: ${existingDoc.filename}.`
+                        });
+                    }
+
+                    // If no duplicate is found, proceed with inserting the new document
+                    insertDocument();
+                }
+            );
+        }
     } catch (error) {
         console.log(error);
         res.render('upload', {
