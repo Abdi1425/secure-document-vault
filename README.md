@@ -1,10 +1,10 @@
-# 🔐 Secure Document Vault
+#  Secure Document Vault
 
 A secure Node.js web application that allows users to securely upload documents, compute cryptographic hashes, verify file integrity, and apply digital signatures. 
 
 Built with the goal of ensuring that uploaded files are authentic, trackable, and free from corruption or tampering.
 
-## ✨ Features
+##  Features
 
 - **User Authentication:** Secure registration and login using JWT and password hashing (bcrypt).
 - **Document Management:** Upload documents and manage them in a personal vault.
@@ -13,7 +13,7 @@ Built with the goal of ensuring that uploaded files are authentic, trackable, an
 - **Integrity Verification:** Verify at any time whether a file has been tampered with by strictly cross-referencing its current live hashes with its original upload hashes from the database.
 - **Digital Signatures:** Generate personal RSA key pairs associated with your account to cryptographically sign documents.
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 - **Backend:** Node.js, Express.js
 - **Database:** MySQL
@@ -21,7 +21,7 @@ Built with the goal of ensuring that uploaded files are authentic, trackable, an
 - **File Uploads:** Multer
 - **Cryptography:** Node `crypto`, `bcryptjs`, `jsonwebtoken`
 
-## ⚙️ Setup and Installation
+##  Setup and Installation
 
 ### 1. Prerequisites
 - Node.js installed on your machine.
@@ -65,5 +65,4 @@ npx nodemon index.js
 
 The app will be accessible at `http://localhost:3000`.
 
-## 📜 License
-ISC License
+
